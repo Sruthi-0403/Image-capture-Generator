@@ -1,27 +1,22 @@
 import streamlit as st
 import cv2
-from utils import save_image
+import numpy as np
 from model import process_image
+from utils import save_image
 
-st.title("📸 Image Capture Generator")
+st.title("📸 Image Capture Generator (Cloud Version)")
 
-# Start camera
-run = st.checkbox("Start Camera")
+uploaded_file = st.file_uploader("Upload an Image", type=["jpg", "png", "jpeg"])
 
-FRAME_WINDOW = st.image([])
+if uploaded_file is not None:
+    file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    frame = cv2.imdecode(file_bytes, 1)
 
-if run:
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # Windows fix
-    ret, frame = cap.read()
+    st.image(frame, channels="BGR", caption="Original Image")
 
-    if ret:
-        FRAME_WINDOW.image(frame, channels="BGR")
+    if st.button("Process Image"):
+        filename = save_image(frame)
+        processed = process_image(frame)
 
-        if st.button("Capture Image"):
-            filename = save_image(frame)
-            processed = process_image(frame)
-
-            st.success(f"Saved: {filename}")
-            st.image(processed, channels="BGR")
-
-    cap.release()
+        st.success(f"Saved: {filename}")
+        st.image(processed, channels="BGR", caption="Processed Image")
